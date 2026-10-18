@@ -475,4 +475,43 @@ describe('useId', () => {
 		render(null, scratch);
 		expect(scratch.innerHTML).to.equal('');
 	});
+
+	it('should assign different root ids to separate render containers', () => {
+		function Id() {
+			const id = useId();
+			return <p id={id}>{id}</p>;
+		}
+
+		const scratch2 = setupScratch();
+		render(<Id />, scratch);
+		render(<Id />, scratch2);
+
+		const id1 = scratch.firstChild.id;
+		const id2 = scratch2.firstChild.id;
+		expect(id1).not.to.equal(id2);
+
+		teardown(scratch2);
+	});
+
+	it('should not change root id on re-renders to the same container', () => {
+		function Id() {
+			const id = useId();
+			return <p id={id}>{id}</p>;
+		}
+
+		render(<Id />, scratch);
+		const idAfterFirst = scratch.firstChild.id;
+
+		render(<Id />, scratch);
+		render(<Id />, scratch);
+		const idAfterThird = scratch.firstChild.id;
+
+		expect(idAfterFirst).to.equal(idAfterThird);
+
+		// A new container rendered after repeated re-renders still gets a distinct root id
+		const scratch2 = setupScratch();
+		render(<Id />, scratch2);
+		expect(scratch2.firstChild.id).not.to.equal(idAfterFirst);
+		teardown(scratch2);
+	});
 });
